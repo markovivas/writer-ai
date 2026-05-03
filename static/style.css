@@ -1,0 +1,136 @@
+:root {
+    --bg: #ffffff;
+    --text: #1a1a1a;
+    --muted: #666666;
+    --accent: #000000;
+    --border: #eeeeee;
+    --card-bg: #f9f9f9;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+}
+
+.app-container {
+    max-width: 800px;
+    width: 90%;
+    padding: 80px 0;
+}
+
+.app-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.app-header h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -1px;
+}
+
+.app-header p {
+    color: var(--muted);
+    margin-top: 8px;
+}
+
+.input-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+textarea {
+    width: 100%;
+    min-height: 160px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    font-size: 1rem;
+    outline: none;
+    resize: none;
+    transition: border-color 0.2s;
+}
+
+textarea:focus {
+    border-color: var(--accent);
+}
+
+.btn-main {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-main:hover {
+    opacity: 0.9;
+}
+
+.results-area {
+    margin-top: 60px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.result-card header {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 12px;
+}
+
+.result-card .content {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.file-info {
+    margin-top: 40px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-align: center;
+}
+
+.loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    color: var(--muted);
+}
+
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.hidden { display: none; }
+
+@media (max-width: 600px) {
+    .result-grid { grid-template-columns: 1fr; }
+}

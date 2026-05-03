@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+
+    ports:
+      - "11434:11434"
+
+    volumes:
+      - ./ollama_data:/root/.ollama
+
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+
+    # GPU NVIDIA (docker compose moderno)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+    # Baixa o modelo automaticamente ao iniciar
+    entrypoint: >
+      /bin/bash -c "
+      ollama serve &
+      sleep 5 &&
+      ollama pull gemma2:2b &&
+      wait
+      "
+
+    restart: unless-stopped
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+
+    ports:
+      - "3000:8080"
+
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+
+    volumes:
+      - ./open_webui_data:/app/backend/data
+
+    depends_on:
+      - ollama
+
+    restart: unless-stopped
