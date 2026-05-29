@@ -82,6 +82,22 @@ Retorno:
 }
 ```
 
+## Acessar o MySQL (HeidiSQL, DBeaver, etc.)
+
+O banco fica exposto na porta `3306` do host:
+
+| Campo | Valor |
+|-------|-------|
+| Host | `localhost` |
+| Porta | `3306` |
+| Usuario | `writer` |
+| Senha | `writerpass` |
+| Database | `writer_ai` |
+
+Credenciais de root: usuario `root`, senha `rootpass`.
+
+Tabela `noticias` criada automaticamente na primeira inicializacao.
+
 ## Comandos uteis
 
 ```bash
