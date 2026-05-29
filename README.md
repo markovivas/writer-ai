@@ -1,152 +1,99 @@
 # Gerador de Noticias IA
 
-Aplicacao web simples em `Flask` para transformar uma noticia em dois formatos de texto com ajuda de um modelo local via `Ollama`:
+Aplicacao web para transformar uma noticia em dois formatos de texto com ajuda de um modelo local via `Ollama`, rodando tudo em containers Docker:
 
-- `Instagram`: texto curto, chamativo e direto
-- `Jornalistico`: texto formal em estilo jornal
+- **Instagram**: texto curto, chamativo e direto
+- **Jornalistico**: texto formal em estilo jornal
 
-O sistema possui uma interface web onde o usuario cola uma noticia, envia o conteudo e recebe os dois resultados lado a lado.
+## Tecnologias
 
-## Como funciona
+- `PHP 8.3` + `Apache`
+- `MySQL 8.0`
+- `Ollama` (modelo `gemma4:e2b`)
+- `HTML` + `CSS` + `JavaScript`
+- `Docker Compose`
 
-O fluxo da aplicacao e este:
+## Estrutura
 
-1. O usuario acessa a pagina inicial.
-2. Digita ou cola uma noticia no campo de texto.
-3. O frontend envia o conteudo para a rota `POST /gerar`.
-4. O backend monta um prompt estruturado.
-5. O `Flask` envia esse prompt para o `Ollama`.
-6. A resposta e separada em duas partes:
-   - `[INSTAGRAM]`
-   - `[JORNALISTICO]`
-7. Os textos sao exibidos na interface.
-
-## Tecnologias usadas
-
-- `Python`
-- `Flask`
-- `Requests`
-- `HTML`
-- `CSS`
-- `JavaScript`
-- `Ollama`
-
-## Estrutura do projeto
-
-```text
+```
 projeto/
-|-- app.py
-|-- requirements.txt
-|-- templates/
-|   `-- index.html
-|-- static/
-|   `-- style.css
-`-- README.md
+├── docker-compose.yml    # Orquestracao dos servicos
+├── Dockerfile.php        # Imagem PHP com PDO MySQL
+├── sql/
+│   └── init.sql          # Schema da tabela noticias
+├── src/
+│   ├── config.php        # Configuracoes e funcoes auxiliares
+│   ├── index.php         # Interface web
+│   ├── gerar.php         # Endpoint que chama Ollama e salva no DB
+│   └── static/
+│       └── style.css     # Estilos
+└── noticias/             # Arquivos .md gerados
 ```
 
 ## Requisitos
 
-Antes de executar, voce precisa ter instalado:
-
-- `Python 3.10+`
-- `pip`
-- `Ollama`
-- Um modelo disponivel no Ollama com o nome configurado no codigo
-
-No momento, o sistema esta configurado para usar:
-
-```python
-MODEL = "gemma4:e2b"
-```
-
-E espera o `Ollama` rodando localmente em:
-
-```python
-OLLAMA_URL = "http://localhost:11434/api/generate"
-```
-
-## Instalacao
-
-Instale as dependencias Python com:
-
-```bash
-pip install -r requirements.txt
-```
+- Docker Desktop (Windows) ou Docker + Docker Compose (Linux)
+- Pelo menos 8 GB de RAM livre (recomendado 16 GB)
 
 ## Como executar
 
-1. Inicie o `Ollama`.
-2. Garanta que o modelo configurado exista localmente.
-3. Execute a aplicacao:
-
 ```bash
-python app.py
+docker compose up -d
 ```
 
-Depois, abra no navegador:
+Acessar: [http://localhost:8090](http://localhost:8090)
 
-```text
-http://127.0.0.1:5000
-```
+## Fluxo
 
-## Rotas da aplicacao
+1. Usuario cola uma noticia na interface
+2. Frontend envia para `POST /gerar.php`
+3. O PHP monta um prompt estruturado e chama o Ollama
+4. A resposta e separada em `[INSTAGRAM]` e `[JORNALISTICO]`
+5. Os textos sao exibidos na tela, salvos em arquivos `.md` e no MySQL
 
-### `GET /`
+## Servicos
 
-Renderiza a interface principal.
+| Servico | Porta | Descricao |
+|---------|-------|-----------|
+| Ollama | 11434 | API do modelo de linguagem |
+| MySQL | 3306 | Banco de dados |
+| PHP App | 8090 | Interface web |
 
-### `POST /gerar`
+## API
 
-Recebe um JSON no formato:
+**POST /gerar.php**
 
 ```json
-{
-  "noticia": "Texto da noticia aqui"
-}
+{ "noticia": "Texto da noticia aqui" }
 ```
 
-E retorna algo como:
+Retorno:
 
 ```json
 {
   "instagram": "Versao curta para Instagram",
-  "jornal": "Versao formal em estilo jornalistico"
+  "jornal": "Versao formal em estilo jornalistico",
+  "instagram_html": "<p>... HTML formatado ...</p>",
+  "jornal_html": "<p>... HTML formatado ...</p>",
+  "arquivos": {
+    "instagram": "slug_instagram.md",
+    "wordpress": "slug_wordpress.md"
+  }
 }
 ```
 
-Se ocorrer erro, a API retorna:
+## Comandos uteis
 
-```json
-{
-  "error": "mensagem de erro"
-}
+```bash
+# Acompanhar logs
+docker compose logs -f
+
+# Parar servicos
+docker compose down
+
+# Parar e remover volumes (dados do banco e modelos)
+docker compose down -v
+
+# Verificar status
+docker compose ps
 ```
-
-## Interface
-
-A interface foi construida para ser simples:
-
-- area de texto para entrada da noticia
-- botao para gerar conteudo
-- indicador de carregamento
-- dois cards de saida
-- layout responsivo para celular
-
-## Observacoes
-
-- A aplicacao depende do `Ollama` rodando localmente.
-- Se o modelo nao existir ou o servico nao estiver ativo, a rota `/gerar` retornara erro.
-- O parser da resposta espera que o modelo devolva os blocos `[INSTAGRAM]` e `[JORNALISTICO]`.
-- A execucao esta com `debug=True`, ideal para desenvolvimento, nao para producao.
-
-## Melhorias futuras
-
-- tratar melhor falhas de conexao com o Ollama
-- melhorar a validacao e separacao da resposta do modelo
-- adicionar botao para copiar os textos gerados
-- permitir troca de modelo por configuracao
-- ajustar textos com problema de codificacao/acentuacao
-
-## Autor
-
-README criado para documentar o sistema atual do projeto.
