@@ -17,7 +17,7 @@
         <section class="input-section">
             <textarea id="input" placeholder="Cole o texto ou link da notícia aqui..."></textarea>
             <button class="btn-main" onclick="gerar()">Processar Conteúdo</button>
-            
+
             <div id="loader" class="loader hidden">
                 <div class="spinner"></div>
                 <span>Gerando...</span>
@@ -44,13 +44,13 @@ async function gerar() {
     const text = document.getElementById("input").value;
     const loader = document.getElementById("loader");
     const results = document.getElementById("results-area");
-    
+
     if (!text) return;
 
     loader.classList.remove("hidden");
     results.classList.add("hidden");
 
-    const res = await fetch("/gerar", {
+    const res = await fetch("/gerar.php", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ noticia: text })
@@ -64,7 +64,7 @@ async function gerar() {
     document.getElementById("out-social").innerHTML = data.instagram_html;
     document.getElementById("out-article").innerHTML = data.jornal_html;
     results.classList.remove("hidden");
-    
+
     if (data.arquivos) {
         document.getElementById("file-info").innerText = `Arquivos salvos: ${data.arquivos.instagram}`;
     }

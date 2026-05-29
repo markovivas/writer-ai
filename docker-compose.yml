@@ -4,48 +4,89 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
-
     ports:
       - "11434:11434"
-
-    volumes:
-      - ./ollama_data:/root/.ollama
-
     environment:
-      - OLLAMA_HOST=0.0.0.0
-
-    # GPU NVIDIA (docker compose moderno)
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
-
-    # Baixa o modelo automaticamente ao iniciar
-    entrypoint: >
-      /bin/bash -c "
-      ollama serve &
-      sleep 5 &&
-      ollama pull gemma2:2b &&
-      wait
-      "
-
+      OLLAMA_HOST: 0.0.0.0
+    volumes:
+      - ollama_data:/root/.ollama
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        set -e
+        echo "=== Entrypoint iniciado ==="
+        
+        chown -R 1000:1000 /root/.ollama 2>/dev/null || true
+        
+        echo "Iniciando ollama serve..."
+        ollama serve 2>&1 &
+        
+        echo "Aguardando Ollama iniciar..."
+        for i in $(seq 1 30); do
+          if grep -qs ':2CAA' /proc/net/tcp6 2>/dev/null || grep -qs ':2CAA' /proc/net/tcp 2>/dev/null; then
+            echo "Ollama pronto."
+            sleep 1
+            break
+          fi
+          echo "Tentativa $$i/30..."
+          sleep 2
+        done
+        
+        if ! grep -qs ':2CAA' /proc/net/tcp6 2>/dev/null && ! grep -qs ':2CAA' /proc/net/tcp 2>/dev/null; then
+          echo "ERRO: Ollama nao iniciou apos 60s."
+          exit 1
+        fi
+        
+        if ! ollama list 2>/dev/null | grep -q "gemma4:e2b"; then
+          echo "Baixando modelo gemma4:e2b..."
+          ollama pull gemma4:e2b
+        else
+          echo "Modelo gemma4:e2b ja instalado."
+        fi
+        
+        wait
     restart: unless-stopped
 
-  open-webui:
-    image: ghcr.io/open-webui/open-webui:main
-    container_name: open-webui
-
-    ports:
-      - "3000:8080"
-
+  mysql:
+    image: mysql:8.0
+    container_name: writer-mysql
     environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
-
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: writer_ai
+      MYSQL_USER: writer
+      MYSQL_PASSWORD: writerpass
+    ports:
+      - "3306:3306"
     volumes:
-      - ./open_webui_data:/app/backend/data
+      - mysql_data:/var/lib/mysql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: unless-stopped
 
+  php-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.php
+    container_name: writer-php
+    ports:
+      - "8090:80"
+    environment:
+      OLLAMA_URL: http://ollama:11434/api/generate
+      MYSQL_HOST: mysql
+      MYSQL_DB: writer_ai
+      MYSQL_USER: writer
+      MYSQL_PASS: writerpass
+      SITE_URL: https://terradorei.com.br/
+    volumes:
+      - ./noticias:/var/www/html/noticias
     depends_on:
       - ollama
-
+      - mysql
     restart: unless-stopped
+
+volumes:
+  ollama_data:
+    driver: local
+
+  mysql_data:
+    driver: local
